@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía Interactiva de Postproducción - Umine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Umine Corporate Palette -->
+    <!-- Application Structure Plan: The SPA uses a vertical scrolling layout with a persistent sidebar navigation on desktop (collapsing to a hamburger menu on mobile). This structure was chosen to allow editors quick, non-linear access to specific technical information (like naming conventions or folder structures) without needing to scroll through the entire document. Sections are logically grouped by function (e.g., all naming rules together) rather than following the original slide order, improving usability for a reference document. Key interactions include tabbed views for different folder structures and visual diagrams instead of plain text lists. -->
+    <!-- Visualization & Content Choices:
+    - Report Info: Folder Structures -> Goal: Organize/Inform -> Viz/Method: Interactive, tabbed file-tree diagram built with HTML/CSS/JS -> Interaction: Click tabs to switch views (Disk, PP, AE). -> Justification: More intuitive and less dense than three separate lists of text. Visually represents the required structure.
+    - Report Info: Workflow -> Goal: Inform -> Viz/Method: Simple flowchart diagram using HTML/CSS -> Interaction: None. -> Justification: A visual flow is easier to understand at a glance than a text description alone.
+    - Report Info: Naming/Delivery Specs -> Goal: Inform/Reference -> Viz/Method: Styled `code` blocks and a clean HTML table -> Interaction: "Copy to Clipboard" button for naming formats. -> Justification: `code` blocks and tables are standard, readable ways to present technical data. Copy button adds utility. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        :root {
+            --color-space: #1d2a4e;
+            --color-grape: #575ea0;
+            --color-deep-sky: #00b3e7;
+            --color-kiwi: #86b722;
+            --color-lemon: #ffd322;
+            --color-candy-apple: #e03728;
+            --color-bg: #f8f9fa;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-space);
+        }
+        .main-accent-bg { background-color: var(--color-deep-sky); }
+        .main-accent-text { color: var(--color-deep-sky); }
+        .secondary-accent-bg { background-color: var(--color-grape); }
+        .secondary-accent-text { color: var(--color-grape); }
+        
+        .nav-link {
+            transition: all 0.2s ease-in-out;
+        }
+        .nav-link.active, .nav-link:hover {
+            background-color: var(--color-deep-sky);
+            color: #FFFFFF;
+        }
+        .section-card {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .info-box {
+            background-color: #f8f9fa; 
+            border: 1px solid #e9ecef;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: center;
+        }
+        .folder-tree ul {
+            padding-left: 1.5rem;
+            border-left: 1px solid #dee2e6;
+        }
+        .folder-tree li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-top: 0.5rem;
+        }
+        .folder-tree li::before {
+            content: '';
+            position: absolute;
+            top: 1rem;
+            left: 0;
+            width: 1rem;
+            height: 1px;
+            background-color: #dee2e6;
+        }
+         .folder-tree .icon {
+            display: inline-block;
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+        .folder-icon::before {
+            content: '📁';
+        }
+        .tab-button.active {
+            border-color: var(--color-deep-sky);
+            background-color: var(--color-deep-sky);
+            color: #FFFFFF;
+        }
+        .step {
+            display: flex;
+            align-items: flex-start;
+        }
+        .step-number {
+            flex-shrink: 0;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            background-color: var(--color-grape);
+            margin-right: 1rem;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="relative min-h-screen md:flex">
+        <!-- Mobile Nav Toggle -->
+        <div class="md:hidden flex justify-between items-center p-4 bg-white shadow-md">
+            <h1 class="text-xl font-bold">Guía de Postproducción</h1>
+            <button id="mobile-menu-button" class="focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </div>
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="bg-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out shadow-lg z-20">
+            <a href="#" class="text-2xl font-bold px-4 flex items-center space-x-3">
+                <span class="w-10 h-10 rounded-lg secondary-accent-bg flex items-center justify-center text-white font-bold text-2xl">U</span>
+                <span>Umine</span>
+            </a>
+            <nav id="nav-menu">
+                <a href="#introduccion" class="nav-link block py-2.5 px-4 rounded-md font-medium">Introducción</a>
+                <a href="#flujo-de-trabajo" class="nav-link block py-2.5 px-4 rounded-md font-medium">Flujo de Trabajo</a>
+                <a href="#nomenclatura" class="nav-link block py-2.5 px-4 rounded-md font-medium">Nomenclatura</a>
+                <a href="#estructura" class="nav-link block py-2.5 px-4 rounded-md font-medium">Estructura de Carpetas</a>
+                <a href="#especificaciones" class="nav-link block py-2.5 px-4 rounded-md font-medium">Especificaciones</a>
+                <a href="#entrega-editables" class="nav-link block py-2.5 px-4 rounded-md font-medium">Entrega de Editables</a>
+                <a href="#checklist" class="nav-link block py-2.5 px-4 rounded-md font-medium">Checklist Final</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-10">
+            <div class="max-w-4xl mx-auto space-y-16">
+
+                <!-- Introducción Section -->
+                <section id="introduccion">
+                    <div class="text-center mb-8">
+                        <h1 class="text-4xl md:text-5xl font-bold">Biblia de Postproducción</h1>
+                        <p class="mt-4 text-lg text-gray-600">Tu guía central para un flujo de trabajo eficiente y estandarizado en Umine.</p>
+                    </div>
+                    <div class="section-card p-8">
+                        <h2 class="text-2xl font-bold mb-4">Bienvenida/o al Equipo</h2>
+                        <p class="text-gray-700 mb-6">
+                            Esta guía describe nuestro flujo de trabajo estandarizado. Seguir estos pasos es obligatorio para todos los proyectos. Nuestro objetivo es asegurar la eficiencia, claridad y colaboración fluida, sin importar quién esté trabajando en ellos. Creemos trabajos increíbles, de manera eficiente.
+                        </p>
+                        <h3 class="text-xl font-bold mb-4 main-accent-text">La Estructura es Esencial</h3>
+                        <p class="text-gray-700">
+                            Un flujo de trabajo organizado no es una preferencia, es un requisito. Demuestra profesionalismo y respeto por el tiempo de todo el equipo. Valoramos a los profesionales disciplinados que entienden que un proyecto limpio y ordenado es la base de un resultado exitoso.
+                        </p>
+                         <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="info-box">
+                                <svg class="w-8 h-8 mx-auto main-accent-text" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                <h4 class="font-bold mt-2">Claridad</h4>
+                                <p class="text-sm text-gray-600">Cualquiera puede entender un proyecto de inmediato.</p>
+                            </div>
+                            <div class="info-box">
+                                <svg class="w-8 h-8 mx-auto main-accent-text" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <h4 class="font-bold mt-2">Eficiencia</h4>
+                                <p class="text-sm text-gray-600">No se pierde tiempo buscando archivos o descifrando versiones.</p>
+                            </div>
+                            <div class="info-box">
+                                <svg class="w-8 h-8 mx-auto main-accent-text" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                <h4 class="font-bold mt-2">Colaboración</h4>
+                                <p class="text-sm text-gray-600">Traspasos fluidos entre animadores, editores y coordinadores.</p>
+                            </div>
+                             <div class="info-box">
+                                <svg class="w-8 h-8 mx-auto main-accent-text" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                                <h4 class="font-bold mt-2">Respeto</h4>
+                                <p class="text-sm text-gray-600">Un proyecto limpio demuestra respeto por el tiempo de tus colegas.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Flujo de Trabajo Section -->
+                <section id="flujo-de-trabajo">
+                    <h2 class="text-3xl font-bold mb-6">Flujo de Trabajo y Herramientas</h2>
+                    <div class="section-card p-8">
+                         <p class="text-gray-700 mb-8">
+                           Para mantener la agilidad y la consistencia en todos nuestros proyectos, utilizamos un conjunto de herramientas estándar y un flujo de trabajo basado en la integración nativa de Adobe. Esto minimiza la exportación de archivos intermedios y facilita las actualizaciones en tiempo real.
+                        </p>
+                        <div class="flex flex-col md:flex-row items-center justify-center gap-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
+                            <div class="text-center">
+                                <p class="text-5xl font-bold secondary-accent-text">AE</p>
+                                <p class="font-bold mt-2">Adobe After Effects</p>
+                                <p class="text-sm text-gray-500">Para Animación</p>
+                            </div>
+                            <div class="text-center font-bold main-accent-text text-2xl">
+                                <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                <p class="text-sm mt-1">Dynamic Link</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-5xl font-bold secondary-accent-text">PP</p>
+                                <p class="font-bold mt-2">Adobe Premiere Pro</p>
+                                <p class="text-sm text-gray-500">Para Edición y Render</p>
+                            </div>
+                        </div>
+                        <div class="mt-6">
+                            <h4 class="font-bold text-lg mb-2">Flujo de Trabajo Central: Dynamic Link</h4>
+                            <p class="text-gray-600">Usamos Dynamic Link de Adobe para conectar composiciones de AE directamente a la línea de tiempo de Premiere Pro. Esto crea un flujo de trabajo fluido y no destructivo. Los cambios realizados en la composición <code class="bg-gray-200 px-1 rounded-md text-sm">MASTER</code> de AE se actualizarán automáticamente en la línea de tiempo de PP. Evita renderizados y exportaciones innecesarias entre programas.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Nomenclatura Section -->
+                <section id="nomenclatura">
+                    <h2 class="text-3xl font-bold mb-6">Nomenclatura de Archivos</h2>
+                    <div class="section-card p-8 space-y-6">
+                        <p class="text-gray-700">Una nomenclatura consistente es la columna vertebral de un proyecto organizado. Sigue estas reglas estrictamente para nombrar carpetas y archivos de render. Esto previene la confusión y errores como `proyecto_final_final_REAL_v2.prproj`.</p>
+                        <div>
+                            <h3 class="text-xl font-bold mb-2">Carpetas de Proyecto</h3>
+                            <p class="mb-2 text-gray-600">Usa el formato <code class="bg-gray-200 px-1 rounded-md text-sm">ID-NombreProyecto</code>.</p>
+                            <div class="bg-gray-100 p-4 rounded-lg flex items-center justify-between border border-gray-200">
+                                <code id="folder-name-code" class="text-gray-800">CP_2025_012 - IAGenerativa</code>
+                                <button onclick="copyToClipboard('folder-name-code')" class="bg-gray-300 hover:bg-gray-400 text-gray-800 text-xs font-bold py-1 px-2 rounded">Copiar</button>
+                            </div>
+                             <p class="mt-2 text-sm text-red-600">Nota: No utilizar tildes (acentos) en los nombres de proyectos ni archivos.</p>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold mb-2">Renders Finales</h3>
+                            <p class="mb-2 text-gray-600">Usa el formato <code class="bg-gray-200 px-1 rounded-md text-sm">ID-#MÓDULO#CLIP_NombreProyecto</code>.</p>
+                            <div class="space-y-2">
+                                <div class="bg-gray-100 p-4 rounded-lg flex items-center justify-between border border-gray-200">
+                                    <code id="draft-name-code" class="text-gray-800">CP_2025_012 - M2C1_IAGenerativa_draft01</code>
+                                    <button onclick="copyToClipboard('draft-name-code')" class="bg-gray-300 hover:bg-gray-400 text-gray-800 text-xs font-bold py-1 px-2 rounded">Copiar</button>
+                                </div>
+                                <div class="bg-gray-100 p-4 rounded-lg flex items-center justify-between border border-gray-200">
+                                    <code id="master-name-code" class="text-gray-800">CP_2025_012 - M2C1_IAGenerativa_master</code>
+                                    <button onclick="copyToClipboard('master-name-code')" class="bg-gray-300 hover:bg-gray-400 text-gray-800 text-xs font-bold py-1 px-2 rounded">Copiar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Estructura de Carpetas Section -->
+                <section id="estructura">
+                    <h2 class="text-3xl font-bold mb-6">Estructura de Carpetas</h2>
+                    <div class="section-card p-8">
+                        <p class="text-gray-700 mb-6">Cada proyecto debe replicar esta estructura de carpetas para mantener un orden consistente. Esto aplica tanto a la estructura en disco como a la organización interna de los archivos de proyecto en Premiere Pro y After Effects.</p>
+                        <div class="border-b border-gray-200">
+                            <nav class="-mb-px flex space-x-1" aria-label="Tabs">
+                                <button class="tab-button whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm rounded-t-md" data-tab="disk">Principal (Disco)</button>
+                                <button class="tab-button whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm rounded-t-md" data-tab="premiere">Premiere Pro</button>
+                                <button class="tab-button whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm rounded-t-md" data-tab="aftereffects">After Effects</button>
+                            </nav>
+                        </div>
+
+                        <div id="tab-content" class="mt-6">
+                            <div class="folder-tree" data-content="disk">
+                                <ul>
+                                    <li><span class="folder-icon icon"></span><span class="font-semibold">01_PROYECTO</span> <span class="text-gray-500 text-sm italic">- Archivos .prproj y .aep</span></li>
+                                    <li><span class="folder-icon icon"></span><span class="font-semibold">02_MEDIA</span> <span class="text-gray-500 text-sm italic">- Caché y archivos generados</span></li>
+                                    <li><span class="folder-icon icon"></span><span class="font-semibold">03_MATERIAL</span> <span class="text-gray-500 text-sm italic">- Videos y animaciones</span></li>
+                                    <li><span class="folder-icon icon"></span><span class="font-semibold">04_AUDIO</span> <span class="text-gray-500 text-sm italic">- Música, VO, SFX</span></li>
+                                    <li><span class="folder-icon icon"></span><span class="font-semibold">05_GRAFICOS</span> <span class="text-gray-500 text-sm italic">- Logos, ilustraciones</span></li>
+                                    <li><span class="folder-icon icon"></span><span class="font-semibold">06_ARCHIVO</span> <span class="text-gray-500 text-sm italic">- Guiones, Manuales de Marca, etc.</span></li>
+                                    <li><span class="folder-icon icon"></span><span class="font-semibold">07_STILLS</span> <span class="text-gray-500 text-sm italic">- Imágenes fijas, storyboards</span></li>
+                                    <li><span class="folder-icon icon"></span><span class="font-semibold">08_RENDERS</span> <span class="text-gray-500 text-sm italic">- Videos finales</span></li>
+                                </ul>
+                            </div>
+                            <div class="folder-tree hidden" data-content="premiere">
+                                <ul>
+                                    <li><span class="folder-icon icon"></span><span class="font-semibold">01_FINAL CUTS</span> <span class="text-gray-500 text-sm italic">- Secuencias finales (Masters)</span></li>
+                                    <li><span class="folder-icon icon"></span><span class="font-semibold">02_ROUGH CUTS</span> <span class="text-gray-500 text-sm italic">- Secuencias en progreso, versiones descartadas</span></li>
+                                    <li><span class="folder-icon icon"></span><span class="font-semibold">03_MATERIAL</span> <span class="text-gray-500 text-sm italic">- Bins de video e imágenes</span></li>
+                                    <li><span class="folder-icon icon"></span><span class="font-semibold">04_AUDIO</span> <span class="text-gray-500 text-sm italic">- Bins de audio</span></li>
+                                    <li><span class="folder-icon icon"></span><span class="font-semibold">05_GRAFICOS</span> <span class="text-gray-500 text-sm italic">- Bins de gráficos</span></li>
+                                    <li><span class="folder-icon icon"></span><span class="font-semibold">06_AEP_LINKS</span> <span class="text-gray-500 text-sm italic">- Composiciones de AE (Dynamic Link)</span></li>
+                                </ul>
+                            </div>
+                            <div class="folder-tree hidden" data-content="aftereffects">
+                                <ul>
+                                    <li><span class="folder-icon icon"></span><span class="font-semibold">MASTER</span> <span class="text-gray-500 text-sm italic">- Composiciones finales para Dynamic Link</span></li>
+                                    <li><span class="folder-icon icon"></span><span class="font-semibold">ADDITIONAL_COMPS</span> <span class="text-gray-500 text-sm italic">- Pre-comps, pruebas</span></li>
+                                    <li><span class="folder-icon icon"></span><span class="font-semibold">ASSETS</span> <span class="text-gray-500 text-sm italic">- Todos los archivos importados</span></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Especificaciones Técnicas Section -->
+                <section id="especificaciones">
+                     <h2 class="text-3xl font-bold mb-6">Especificaciones de Entrega</h2>
+                     <div class="section-card p-8">
+                        <p class="text-gray-700 mb-6">Para garantizar la compatibilidad y la máxima calidad en todas las plataformas, todos los entregables finales deben exportarse con la siguiente configuración, a menos que se indique explícitamente lo contrario para un proyecto específico.</p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="border-b-2 border-gray-200">
+                                    <tr>
+                                        <th class="py-3 px-4 font-bold uppercase text-sm text-gray-600">Característica</th>
+                                        <th class="py-3 px-4 font-bold uppercase text-sm text-gray-600">Especificación</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100">
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="py-3 px-4 font-semibold">Códec de Video</td>
+                                        <td class="py-3 px-4">H.264</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="py-3 px-4 font-semibold">Contenedor</td>
+                                        <td class="py-3 px-4">.MP4</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="py-3 px-4 font-semibold">Resolución</td>
+                                        <td class="py-3 px-4">1920x1080</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="py-3 px-4 font-semibold">Proporción de Píxeles</td>
+                                        <td class="py-3 px-4">Píxeles Cuadrados (1.0)</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="py-3 px-4 font-semibold">Tasa de Fotogramas</td>
+                                        <td class="py-3 px-4">29.97 fps</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="py-3 px-4 font-semibold">Frec. de Muestreo (Audio)</td>
+                                        <td class="py-3 px-4">48 kHz</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="py-3 px-4 font-semibold">Tasa de Bits (Audio)</td>
+                                        <td class="py-3 px-4">320 kbps</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="py-3 px-4 font-semibold">Subtítulos (si aplica)</td>
+                                        <td class="py-3 px-4">Archivo .SRT</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                     </div>
+                </section>
+                
+                <!-- Entrega de Editables Section -->
+                <section id="entrega-editables">
+                     <h2 class="text-3xl font-bold mb-6">Entrega de Editables</h2>
+                     <div class="section-card p-8">
+                        <p class="text-gray-700 mb-6">Al finalizar un proyecto, es crucial entregar un paquete de editables limpio y autocontenido. Esto se realiza utilizando el <strong class="secondary-accent-text">Administrador de Proyectos (Project Manager)</strong> de Premiere Pro para asegurar que no falte ningún material.</p>
+                        <div class="space-y-6">
+                            <div class="step">
+                                <div class="step-number">1</div>
+                                <div>
+                                    <h4 class="font-bold">Limpiar el Proyecto</h4>
+                                    <p class="text-gray-600">Antes de empaquetar, elimina secuencias, clips y gráficos no utilizados del proyecto de Premiere Pro. Mantén únicamente las secuencias finales en la carpeta <code class="bg-gray-200 text-xs px-1 rounded-md">01_FINAL CUTS</code>.</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">2</div>
+                                <div>
+                                    <h4 class="font-bold">Abrir Project Manager</h4>
+                                    <p class="text-gray-600">En Premiere Pro, ve a <code class="bg-gray-200 text-xs px-1 rounded-md">File > Project Manager...</code></p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">3</div>
+                                <div>
+                                    <h4 class="font-bold">Seleccionar Secuencias por Módulo</h4>
+                                    <p class="text-gray-600">Dentro del Project Manager, <strong class="font-semibold">empaqueta el proyecto por módulos si aplica</strong>. Selecciona todas las secuencias pertenecientes a un mismo módulo (ej. todas las de M1) para crear un paquete. Repite este proceso para cada módulo (M2, M3, etc.).</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">4</div>
+                                <div>
+                                    <h4 class="font-bold">Configurar Opciones</h4>
+                                    <p class="text-gray-600">En la sección "Resulting Project", selecciona la opción <strong class="font-semibold">"Collect Files and Copy to New Location"</strong>. Esto creará una nueva carpeta de proyecto con copias de todo el media necesario.</p>
+                                    <ul class="list-disc list-inside mt-2 text-sm text-gray-600">
+                                        <li>Excluye clips no utilizados (Exclude Unused Clips).</li>
+                                        <li>Incluye archivos de audio (Include Audio Conform Files).</li>
+                                        <li>Renombra los archivos para que coincidan (Rename Media Files to Match Clip Names).</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">5</div>
+                                <div>
+                                    <h4 class="font-bold">Comprimir y Entregar por Módulo</h4>
+                                    <p class="text-gray-600">Una vez que el Project Manager cree la nueva carpeta para un módulo, comprímela en un archivo <strong class="font-semibold">.zip</strong>. Nombra el archivo indicando el módulo (ej. <code class="bg-gray-200 text-xs px-1 rounded-md">Proyecto_M1.zip</code>) y súbelo a Drive. Repite para los demás módulos.</p>
+                                </div>
+                            </div>
+                        </div>
+                     </div>
+                </section>
+
+                <!-- Checklist Final Section -->
+                <section id="checklist">
+                    <h2 class="text-3xl font-bold mb-6">Checklist Final</h2>
+                     <div class="section-card p-8">
+                        <p class="text-gray-700 mb-6">Antes de entregar cualquier proyecto para revisión, asegúrate de cumplir con estos puntos finales. Esto nos ayuda a todos a mantener la calidad y agilizar el proceso de aprobación.</p>
+                        <ul class="space-y-4">
+                            <li class="flex items-start">
+                                <span class="mr-4 mt-1 flex-shrink-0 h-5 w-5 main-accent-bg rounded-full flex items-center justify-center text-white font-bold text-xs">✓</span>
+                                <div>
+                                    <h4 class="font-bold">La comunicación es clave</h4>
+                                    <p class="text-gray-600">Si tienes preguntas sobre la estructura o necesitas aclaraciones, pregunta de inmediato.</p>
+                                </div>
+                            </li>
+                             <li class="flex items-start">
+                                <span class="mr-4 mt-1 flex-shrink-0 h-5 w-5 main-accent-bg rounded-full flex items-center justify-center text-white font-bold text-xs">✓</span>
+                                <div>
+                                    <h4 class="font-bold">Sin archivos sueltos</h4>
+                                    <p class="text-gray-600">Todos los recursos utilizados deben estar dentro de la estructura de carpetas del proyecto.</p>
+                                </div>
+                            </li>
+                             <li class="flex items-start">
+                                <span class="mr-4 mt-1 flex-shrink-0 h-5 w-5 main-accent-bg rounded-full flex items-center justify-center text-white font-bold text-xs">✓</span>
+                                <div>
+                                    <h4 class="font-bold">Limpia tus proyectos</h4>
+                                    <p class="text-gray-600">Antes de enviar para revisión, elimina archivos no utilizados y organiza tus líneas de tiempo.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="mr-4 mt-1 flex-shrink-0 h-5 w-5 main-accent-bg rounded-full flex items-center justify-center text-white font-bold text-xs">✓</span>
+                                <div>
+                                    <h4 class="font-bold">Editables Empaquetados</h4>
+                                    <p class="text-gray-600">Asegúrate de haber entregado los archivos .zip por módulo con los editables empaquetados usando el Project Manager.</p>
+                                </div>
+                            </li>
+                        </ul>
+                        <div class="mt-8 pt-6 border-t border-gray-200 text-center">
+                            <p class="text-gray-600">Gracias por tu profesionalismo y atención al detalle. ♡</p>
+                        </div>
+                     </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const sidebar = document.getElementById('sidebar');
+        mobileMenuButton.addEventListener('click', () => {
+            sidebar.classList.toggle('-translate-x-full');
+        });
+
+        // Close sidebar when a link is clicked on mobile
+        const navLinks = document.querySelectorAll('#nav-menu a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth < 768) {
+                    sidebar.classList.add('-translate-x-full');
+                }
+            });
+        });
+        
+        // Active nav link highlighting on scroll
+        const sections = document.querySelectorAll('section');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+                    const id = entry.target.getAttribute('id');
+                    const activeLink = document.querySelector(`.nav-link[href="#${id}"]`);
+                    if(activeLink) {
+                        activeLink.classList.add('active');
+                    }
+                }
+            });
+        }, { rootMargin: '-30% 0px -70% 0px' });
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+
+        // Tabs for folder structure
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('[data-content]');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.dataset.tab;
+
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                tabContents.forEach(content => {
+                    if (content.dataset.content === tabId) {
+                        content.classList.remove('hidden');
+                    } else {
+                        content.classList.add('hidden');
+                    }
+                });
+            });
+        });
+        // Set initial active tab
+        document.querySelector('.tab-button[data-tab="disk"]').classList.add('active');
+    });
+
+    // Copy to clipboard function
+    function copyToClipboard(elementId) {
+        const textToCopy = document.getElementById(elementId).innerText;
+        
+        // Use the Clipboard API
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            const button = document.querySelector(`[onclick="copyToClipboard('${elementId}')"]`);
+            const originalText = button.innerHTML;
+            button.innerHTML = 'Copiado!';
+            button.style.backgroundColor = 'var(--color-kiwi)';
+            button.style.color = 'white';
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.style.backgroundColor = '';
+                button.style.color = '';
+            }, 1500);
+        }).catch(err => {
+            console.error('Error al copiar texto: ', err);
+            // Fallback for older browsers
+            try {
+                const textArea = document.createElement("textarea");
+                textArea.value = textToCopy;
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+
+                const button = document.querySelector(`[onclick="copyToClipboard('${elementId}')"]`);
+                const originalText = button.innerHTML;
+                button.innerHTML = 'Copiado!';
+                button.style.backgroundColor = 'var(--color-kiwi)';
+                button.style.color = 'white';
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.style.backgroundColor = '';
+                    button.style.color = '';
+                }, 1500);
+
+            } catch (err) {
+                console.error('Fallback: Oops, no se pudo copiar', err);
+            }
+        });
+    }
+
+</script>
+</body>
+</html>
